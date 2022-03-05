@@ -55,12 +55,13 @@ class mainWindow():
 
         ##actual code
         with open('setCollectionFile', 'rb') as f:
-            loadedSets = pickle.load(f)
+            try:
+            self.masterDict = pickle.load(f)
             #print("unpickled", loadedSets)
-            for set in loadedSets:  #this grabs the cardSet
+            for set in self.masterDict:  #this grabs the cardSet
 
-                Button(root, text=set, bd=5, command= lambda set=set:self.openSet(set,loadedSets[set],root) ).pack(anchor=N,side=BOTTOM,expand=YES,fill=BOTH)
-
+                Button(root, text=set, bd=5, command= lambda set=set:self.openSet(set,self.masterDict[set],root) ).pack(anchor=N,side=BOTTOM,expand=YES,fill=BOTH)
+            #except #TODO add catch for when the file is empty  
 
     def incKey(self):
         self.cardNumber+=1
@@ -98,14 +99,7 @@ class mainWindow():
         self.flipped=False
 
         self.workingTitle=""
-
-        #these are only temporary
-        nestedDict = {"does this work?":"I hope so", "yeet":"endSet1"}
-        setCollection = { "Set1":nestedDict, "Set2":{"sq1":"sa1"}     }
-
-        with open('setCollectionFile', 'wb') as f:
-            pickle.dump(setCollection, f, pickle.HIGHEST_PROTOCOL)
-            print("pickling")
+        self.masterDict= {} #{ "Set1":{"s1q1":"s1a1"}, "Set2":{"s2q1":"s2a1"}     }
 
         if origin==False:
             win=Tk() ##upon initiation make the start screen
@@ -128,8 +122,9 @@ class mainWindow():
 
     class addCard():
 
-        def __init__(self,root,Q,A):
+        def __init__(self,root,Q,A,dict):
             #then adds QA into a cardList for easy viewing
+            self.dict=dict
             self.root=root
             self.question=Q
             self.answer=A
@@ -152,7 +147,7 @@ class mainWindow():
                 each.destroy()
 
             self.newCardFrame.pack_forget()
-            #now to remove the qa from the list 
+            del self.dict[self.question] #removes entry from dict
 
 
 
@@ -164,6 +159,15 @@ class mainWindow():
     def viewCard(self):
         pass
 
+    def saveReturn(self,root):
+        #saves the set and returns to the menu
+        self.masterDict[self.workingTitle]=self.workingDict
+        print(self.masterDict)
+        with open('setCollectionFile', 'wb') as f:
+            pickle.dump(self.masterDict, f, pickle.HIGHEST_PROTOCOL)
+            print("pickling")
+
+        self.createMenu(root)
 
 
     def createSet(self,root):
@@ -218,16 +222,16 @@ class mainWindow():
             def grabQA():
                  #enters QA into the workingDict
                  if Qinput.get().strip()!= "" and Ainput.get().strip():
-                     print("valid", self.workingDict)
                      questionStrip= Qinput.get().strip()
                      answerStrip=Ainput.get().strip()
 
                      if questionStrip not in self.workingDict:
                          self.workingDict[questionStrip]= answerStrip
-                         self.addCard(cardSubFrame,questionStrip,answerStrip)
+                         self.addCard(cardSubFrame,questionStrip,answerStrip,self.workingDict)
 
                          cardSubFrame.update_idletasks()
                          cardCanvas.config(scrollregion=cardCanvas.bbox("all"))
+                         print("valid", self.workingDict)
                          #now make new key/value card and add it to a scrollable view
 
 
@@ -249,13 +253,11 @@ class mainWindow():
             scroll.grid(column=0,row=1,stick="ns")
             cardCanvas.configure(yscrollcommand=scroll.set)
 
+            saveBTN= Button(text="Save set \n and return", command=lambda:self.saveReturn(root))
+            saveBTN.grid(column=3,row=5)
+
             cardSubFrame=Frame(cardFrame,bg="white")
             cardCanvas.create_window((0,0), window=cardSubFrame, anchor="nw")
-
-            #for x in range(20):
-            #    print("oof")
-            #    Label(cardSubFrame,text="hello world").grid(column=0,row=x+4)
-
 
 
             cardSubFrame.update_idletasks()
