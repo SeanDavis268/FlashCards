@@ -56,12 +56,13 @@ class mainWindow():
         ##actual code
         with open('setCollectionFile', 'rb') as f:
             try:
-            self.masterDict = pickle.load(f)
-            #print("unpickled", loadedSets)
-            for set in self.masterDict:  #this grabs the cardSet
+                self.masterDict = pickle.load(f)
+                #print("unpickled", loadedSets)
+                for set in self.masterDict:  #this grabs the cardSet
 
-                Button(root, text=set, bd=5, command= lambda set=set:self.openSet(set,self.masterDict[set],root) ).pack(anchor=N,side=BOTTOM,expand=YES,fill=BOTH)
-            #except #TODO add catch for when the file is empty  
+                    Button(root, text=set, bd=5, command= lambda set=set:self.openSet(set,self.masterDict[set],root) ).pack(anchor=N,side=BOTTOM,expand=YES,fill=BOTH)
+            except:
+                print("error raised")
 
     def incKey(self):
         self.cardNumber+=1
@@ -74,10 +75,19 @@ class mainWindow():
         self.setCard()
     def setCard(self):
         #gonna need protections against list out of bounds
+
+        if self.cardNumber >= len(self.setQuestions): #out of bounds
+            self.cardNumber=0
+            print("setTo0")
+        elif self.cardNumber<0:
+            self.cardNumber= len(self.setQuestions)-1
+            print(self.cardNumber, "card number")
+
         self.QAtext.set(self.setQuestions[self.cardNumber])
         self.QAlabel["text"]=self.QAtext.get()
         self.flipped=False
         print(self.QAtext.get())
+
 
     def flipFN(self,dict):
         """flips the card. ie replaces the text with either the answer or the
@@ -189,13 +199,21 @@ class mainWindow():
             #if a title has not been made
             titleEntryLabel= Label(text="Enter Title of Set Here:")
             titleEntryLabel.grid(column=1,row=1)
+            descLabel = Label(text="Or enter existing title to delete it.")
+            descLabel.grid(column=1,row=2)
 
             def getTitle():
                 #check if empty or if just whiteSpace
                 if titleEntry.get().strip()!="":
                     self.workingTitle=titleEntry.get().strip()
                     print(self.workingTitle)
-                    self.createSet(root)
+
+                    #check if in masterDict
+                    if self.workingTitle in self.masterDict:
+                        print("already made")
+                        #ask if it should be deleted 
+                    else: #new set
+                        self.createSet(root)
 
             titleEntry= Entry()
             titleEntry.grid(column=2,row=1)
