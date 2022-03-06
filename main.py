@@ -62,7 +62,7 @@ class mainWindow():
 
                     Button(root, text=set, bd=5, command= lambda set=set:self.openSet(set,self.masterDict[set],root) ).pack(anchor=N,side=BOTTOM,expand=YES,fill=BOTH)
             except:
-                print("error raised")
+                print("no card sets")
 
     def incKey(self):
         self.cardNumber+=1
@@ -180,6 +180,15 @@ class mainWindow():
         self.createMenu(root)
 
 
+    def deleteSet(self,setName):
+        #remove set from masterDict
+         del self.masterDict[setName]
+         #then save the change
+         with open('setCollectionFile', 'wb') as f:
+             pickle.dump(self.masterDict, f, pickle.HIGHEST_PROTOCOL)
+             print("pickling")
+
+
     def createSet(self,root):
 
         self.workingQ=""
@@ -211,7 +220,9 @@ class mainWindow():
                     #check if in masterDict
                     if self.workingTitle in self.masterDict:
                         print("already made")
-                        #ask if it should be deleted 
+                        #ask if it should be deleted
+                        deleteBtn= Button(text="Delete \n"+self.workingTitle+"?",command=lambda:self.deleteSet(self.workingTitle))
+                        deleteBtn.grid(column=3,row=2)
                     else: #new set
                         self.createSet(root)
 
